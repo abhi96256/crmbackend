@@ -1,0 +1,19 @@
+# Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=maydivinfotech@gmail.com
+SMTP_PASS=djvd kzaf pzxb czwp
+FROM_EMAIL=maydivinfotech@gmail.com
+ADMIN_EMAIL=ravindranathjha76@gmail.com
+
+# Database Configuration (if not already set)
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=crm
+
+# JWT Secret
+JWT_SECRET=your-super-secret-jwt-key
+
+# Server Port
+PORT=5000 
