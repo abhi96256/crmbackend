@@ -5,7 +5,7 @@ async function testServer() {
     console.log('🔍 Testing server connection...');
     
     // Test health endpoint
-    const healthResponse = await fetch('http://localhost:5000/api/health');
+    const healthResponse = await fetch('https://crmbackend-fahc.onrender.com/api/health');
     console.log('✅ Health check status:', healthResponse.status);
     
     if (healthResponse.ok) {
@@ -14,7 +14,7 @@ async function testServer() {
       
       // Test invoices endpoint
       console.log('🔍 Testing invoices endpoint...');
-      const invoicesResponse = await fetch('http://localhost:5000/api/invoices');
+      const invoicesResponse = await fetch('https://crmbackend-fahc.onrender.com/api/invoices');
       console.log('📊 Invoices status:', invoicesResponse.status);
       
       if (invoicesResponse.ok) {

@@ -47,7 +47,7 @@ async function quickFixEmployee() {
     console.log('\n📝 Test Employee Credentials:');
     console.log('Email: employee@test.com');
     console.log('Password: password123');
-    console.log('\n🔗 Login URL: http://localhost:5173/login');
+    console.log('\n🔗 Login URL: https://your-frontend-url.com/login');
     
   } catch (error) {
     console.error('❌ Error:', error.message);

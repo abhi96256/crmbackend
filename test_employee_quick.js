@@ -54,7 +54,7 @@ async function testEmployeeLogin() {
       console.log('\n📝 Login Credentials:');
       console.log('Email: employee@test.com');
       console.log('Password: password123');
-      console.log('\n🔗 Try logging in at: http://localhost:5173/login');
+      console.log('\n🔗 Try logging in at: https://your-frontend-url.com/login');
     } else {
       console.log('\n❌ Employee login test FAILED!');
     }

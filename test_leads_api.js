@@ -5,7 +5,7 @@ async function testLeadsAPI() {
     console.log('Testing Leads API...');
     
     // First, let's try to get a token by logging in
-    const loginResponse = await fetch('http://localhost:5000/api/auth/login', {
+    const loginResponse = await fetch('https://crmbackend-fahc.onrender.com/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -28,7 +28,7 @@ async function testLeadsAPI() {
     console.log('✅ Login successful, got token');
     
     // Now test the emails API
-    const emailsResponse = await fetch('http://localhost:5000/api/leads/emails', {
+    const emailsResponse = await fetch('https://crmbackend-fahc.onrender.com/api/leads/emails', {
       headers: {
         'Authorization': `Bearer ${token}`
       }

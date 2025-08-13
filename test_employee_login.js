@@ -1,7 +1,7 @@
 import axios from 'axios';
 import bcrypt from 'bcryptjs';
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://crmbackend-fahc.onrender.com/api';
 
 // Test employee data
 const testEmployee = {

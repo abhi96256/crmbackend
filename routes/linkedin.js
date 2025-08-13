@@ -1,13 +1,14 @@
 import express from 'express';
 import axios from 'axios';
 import pool from '../config/db.js';
+import { LINKEDIN_REDIRECT_URI } from '../config/urls.js';
 const router = express.Router();
 
 // LinkedIn OAuth configuration
 const LINKEDIN_CONFIG = {
   clientId: process.env.LINKEDIN_CLIENT_ID || '866eyvx5xn4gaw',
   clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-  redirectUri: process.env.LINKEDIN_REDIRECT_URI || 'http://localhost:5000/api/linkedin/auth/callback',
+  redirectUri: process.env.LINKEDIN_REDIRECT_URI || LINKEDIN_REDIRECT_URI,
   scope: process.env.LINKEDIN_SCOPE || 'r_liteprofile r_emailaddress r_organization_social w_member_social'
 };
 

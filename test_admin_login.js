@@ -54,7 +54,7 @@ async function testAdminLogin() {
       console.log('\n📝 Admin Credentials:');
       console.log('Email: admin@crm.com');
       console.log('Password: admin123');
-      console.log('\n🔗 Try logging in at: http://localhost:5173/login');
+      console.log('\n🔗 Try logging in at: https://your-frontend-url.com/login');
     } else {
       console.log('\n❌ Admin login test FAILED!');
     }
