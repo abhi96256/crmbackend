@@ -1,7 +1,7 @@
 const pool = require('../config/db.js');
 
 // Activity Logger Utility
-export const activityLogger = {
+const activityLogger = {
   // Log lead activities
   logLeadCreated: async (userId, leadId, leadName, source, stage) => {
     try {
