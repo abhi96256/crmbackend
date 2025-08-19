@@ -1,8 +1,8 @@
-import express from 'express';
-import { body, validationResult } from 'express-validator';
-import db from '../utils/database.js';
-import { auth, adminAuth } from '../middleware/auth.js';
-import bcrypt from 'bcryptjs';
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const { db } = require('../utils/database.js');
+const { auth, adminAuth } = require('../middleware/auth.js');
+const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 

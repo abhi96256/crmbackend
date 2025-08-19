@@ -16,11 +16,16 @@ const config = {
 const env = process.env.NODE_ENV || 'development';
 
 // Export the appropriate configuration
-export const urls = config[env];
+const urls = config[env];
 
 // Export individual URLs for convenience
-export const BASE_URL = urls.baseUrl;
-export const FRONTEND_URL = urls.frontendUrl;
-export const LINKEDIN_REDIRECT_URI = urls.linkedinRedirectUri;
+const BASE_URL = urls.baseUrl;
+const FRONTEND_URL = urls.frontendUrl;
+const LINKEDIN_REDIRECT_URI = urls.linkedinRedirectUri;
 
-export default urls;
+module.exports = {
+  urls,
+  BASE_URL,
+  FRONTEND_URL,
+  LINKEDIN_REDIRECT_URI
+};
