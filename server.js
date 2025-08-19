@@ -70,25 +70,40 @@ app.use('/api/linkedin', linkedinRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/groups', groupRoutes);
 
-// Health check routes
+// Health check route
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
-    message: 'CRM Backend is running!',
+    message: 'Server is running',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development'
   });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'CRM Backend API is running!',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
-  });
+// Enhanced health check route
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    const db = await import('./utils/database.js');
+    const dbHealth = await db.db.testConnection();
+    
+    res.json({
+      status: 'OK',
+      message: 'Server and database are running',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      database: dbHealth
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'ERROR',
+      message: 'Server error during health check',
+      timestamp: new Date().toISOString(),
+      error: error.message
+    });
+  }
 });
 
 // Error handling middleware

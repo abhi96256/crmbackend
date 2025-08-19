@@ -1,92 +1,94 @@
-import mysql from 'mysql2/promise';
-import pg from 'pg';
+const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 
-const { Pool } = pg;
+// Database configuration
+const dbConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'crm_db',
+  charset: 'utf8mb4'
+};
 
-// Determine which database driver to use
-const usePostgreSQL = process.env.DB_DRIVER === 'postgresql';
+// PostgreSQL configuration
+const pgConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'crm_db',
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // Better connection handling
+  max: 20,
+  min: 2,
+  idleTimeoutMillis: 300000, // 5 minutes
+  connectionTimeoutMillis: 30000, // 30 seconds
+  acquireTimeoutMillis: 30000,
+  reapIntervalMillis: 1000,
+  createTimeoutMillis: 30000,
+  destroyTimeoutMillis: 5000,
+  // Connection retry settings
+  maxRetries: 3,
+  retryDelay: 1000
+};
 
 let pool;
 
-if (usePostgreSQL) {
-  // PostgreSQL Configuration
-  const pgConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 5432,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 20,
-    min: 2,
-    idleTimeoutMillis: 300000, // 5 minutes
-    connectionTimeoutMillis: 30000, // 30 seconds
-    acquireTimeoutMillis: 30000, // 30 seconds
-    reapIntervalMillis: 1000, // Check for dead connections every second
-    createTimeoutMillis: 30000, // 30 seconds to create connection
-    destroyTimeoutMillis: 5000, // 5 seconds to destroy connection
-  };
-  
+// Determine which database driver to use
+if (process.env.DB_DRIVER === 'postgresql') {
+  console.log('Using PostgreSQL driver');
   pool = new Pool(pgConfig);
   
   // PostgreSQL connection event handlers
   pool.on('connect', (client) => {
-    console.log('✅ New client connected to PostgreSQL pool');
+    console.log('PostgreSQL client connected');
   });
   
   pool.on('acquire', (client) => {
-    console.log('✅ Client acquired from PostgreSQL pool');
+    console.log('PostgreSQL client acquired from pool');
   });
   
   pool.on('release', (client) => {
-    console.log('✅ Client released back to PostgreSQL pool');
+    console.log('PostgreSQL client released back to pool');
   });
   
   pool.on('error', (err, client) => {
-    console.error('❌ PostgreSQL Pool Error:', err);
-    if (client) {
-      console.log('Error occurred on client:', client);
-    }
+    console.error('PostgreSQL pool error:', err);
   });
   
   pool.on('remove', (client) => {
-    console.log('✅ Client removed from PostgreSQL pool');
+    console.log('PostgreSQL client removed from pool');
   });
   
+  // Test PostgreSQL connection
+  pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+      console.error('PostgreSQL connection test failed:', err);
+    } else {
+      console.log('PostgreSQL connection test successful:', res.rows[0]);
+    }
+  });
 } else {
-  // MySQL Configuration (for development)
-  const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'your_mysql_password',
-    database: process.env.DB_NAME || 'crm',
-    port: process.env.DB_PORT || 3306,
+  console.log('Using MySQL driver');
+  pool = mysql.createPool({
+    ...dbConfig,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
-  };
+    queueLimit: 0,
+    acquireTimeout: 30000,
+    timeout: 60000,
+    reconnect: true
+  });
   
-  pool = mysql.createPool(dbConfig);
+  // Test MySQL connection
+  pool.execute('SELECT 1')
+    .then(() => {
+      console.log('MySQL connection test successful');
+    })
+    .catch(err => {
+      console.error('MySQL connection test failed:', err);
+    });
 }
 
-// Test database connection
-const testConnection = async () => {
-  try {
-    if (usePostgreSQL) {
-      const client = await pool.connect();
-      console.log('✅ PostgreSQL connection test successful');
-      client.release();
-    } else {
-      const connection = await pool.getConnection();
-      console.log('✅ MySQL connection test successful');
-      connection.release();
-    }
-  } catch (error) {
-    console.error('❌ Database connection test failed:', error.message);
-  }
-};
-
-// Test connection on startup
-testConnection();
-
-export default pool; 
+module.exports = pool; 
