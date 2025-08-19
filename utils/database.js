@@ -15,8 +15,15 @@ const retryOperation = async (operation, retries = MAX_RETRIES) => {
   try {
     return await operation();
   } catch (error) {
-    if (retries > 0 && (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.message.includes('Connection terminated'))) {
-      console.log(`Database connection error, retrying... (${retries} attempts left)`);
+    if (retries > 0 && (
+      error.code === 'ECONNRESET' || 
+      error.code === 'ENOTFOUND' || 
+      error.code === 'ECONNREFUSED' ||
+      error.message.includes('Connection terminated') ||
+      error.message.includes('connection terminated') ||
+      error.message.includes('no connection')
+    )) {
+      console.log(`🔄 Database connection error, retrying... (${retries} attempts left)`);
       await wait(RETRY_DELAY);
       return retryOperation(operation, retries - 1);
     }
@@ -39,7 +46,12 @@ const db = {
           return await pool.execute(query, params);
         }
       } catch (error) {
-        console.error('Database execute error:', error);
+        console.error('❌ Database execute error:', error.message);
+        // Log additional details for debugging
+        if (usePostgreSQL) {
+          console.log('🔍 PostgreSQL query:', query);
+          console.log('🔍 PostgreSQL params:', params);
+        }
         throw error;
       }
     });
@@ -56,7 +68,7 @@ const db = {
           return await pool.query(query);
         }
       } catch (error) {
-        console.error('Database query error:', error);
+        console.error('❌ Database query error:', error.message);
         throw error;
       }
     });
@@ -72,7 +84,7 @@ const db = {
           return await pool.getConnection();
         }
       } catch (error) {
-        console.error('Database getConnection error:', error);
+        console.error('❌ Database getConnection error:', error.message);
         throw error;
       }
     });
@@ -87,7 +99,7 @@ const db = {
         connection.release();
       }
     } catch (error) {
-      console.error('Database releaseConnection error:', error);
+      console.error('❌ Database releaseConnection error:', error.message);
     }
   },
 
@@ -100,7 +112,7 @@ const db = {
         await connection.beginTransaction();
       }
     } catch (error) {
-      console.error('Database beginTransaction error:', error);
+      console.error('❌ Database beginTransaction error:', error.message);
       throw error;
     }
   },
@@ -114,7 +126,7 @@ const db = {
         await connection.commit();
       }
     } catch (error) {
-      console.error('Database commitTransaction error:', error);
+      console.error('❌ Database commitTransaction error:', error.message);
       throw error;
     }
   },
@@ -128,7 +140,7 @@ const db = {
         await connection.rollback();
       }
     } catch (error) {
-      console.error('Database rollbackTransaction error:', error);
+      console.error('❌ Database rollbackTransaction error:', error.message);
       throw error;
     }
   },
@@ -145,6 +157,22 @@ const db = {
       }
     } catch (error) {
       return { status: 'unhealthy', error: error.message };
+    }
+  },
+
+  // Get pool status
+  getPoolStatus() {
+    if (usePostgreSQL) {
+      return {
+        totalCount: pool.totalCount,
+        idleCount: pool.idleCount,
+        waitingCount: pool.waitingCount
+      };
+    } else {
+      return {
+        connectionLimit: pool.config.connectionLimit,
+        queueLimit: pool.config.queueLimit
+      };
     }
   }
 };
