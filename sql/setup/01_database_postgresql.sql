@@ -34,3 +34,4 @@ ON CONFLICT (email) DO NOTHING;
 -- Log the setup
 INSERT INTO activity_logs (user_id, action, description, ip_address) VALUES 
 (1, 'SYSTEM_SETUP', 'Database initialized successfully', '127.0.0.1');
+

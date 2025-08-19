@@ -99,3 +99,4 @@ const testConnection = async () => {
 setTimeout(testConnection, 1000);
 
 module.exports = pool;
+
