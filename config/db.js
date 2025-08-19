@@ -43,14 +43,27 @@ let pool;
 // Determine which database driver to use
 if (process.env.DB_DRIVER === 'postgresql') {
   console.log('🔌 Using PostgreSQL driver');
-  console.log('📊 Database config:', {
-    host: pgConfig.host,
-    port: pgConfig.port,
-    database: pgConfig.database,
-    user: pgConfig.user
-  });
   
-  pool = new Pool(pgConfig);
+  // Try DATABASE_URL first (Render provides this)
+  if (process.env.DATABASE_URL) {
+    console.log('📊 Using DATABASE_URL connection string');
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    });
+  } else {
+    console.log('📊 Using individual environment variables');
+    console.log('📊 Database config:', {
+      host: pgConfig.host,
+      port: pgConfig.port,
+      database: pgConfig.database,
+      user: pgConfig.user
+    });
+    pool = new Pool(pgConfig);
+  }
   
   // PostgreSQL connection event handlers
   pool.on('connect', (client) => {
