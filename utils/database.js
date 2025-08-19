@@ -10,6 +10,26 @@ const RETRY_DELAY = 1000;
 // Helper function to wait
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper function to validate connection
+const validateConnection = async () => {
+  try {
+    if (usePostgreSQL) {
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+      return true;
+    } else {
+      const connection = await pool.getConnection();
+      await connection.execute('SELECT 1');
+      connection.release();
+      return true;
+    }
+  } catch (error) {
+    console.error('❌ Connection validation failed:', error.message);
+    return false;
+  }
+};
+
 // Helper function to retry operations
 const retryOperation = async (operation, retries = MAX_RETRIES) => {
   try {
@@ -21,10 +41,20 @@ const retryOperation = async (operation, retries = MAX_RETRIES) => {
       error.code === 'ECONNREFUSED' ||
       error.message.includes('Connection terminated') ||
       error.message.includes('connection terminated') ||
-      error.message.includes('no connection')
+      error.message.includes('no connection') ||
+      error.message.includes('Connection terminated unexpectedly')
     )) {
       console.log(`🔄 Database connection error, retrying... (${retries} attempts left)`);
-      await wait(RETRY_DELAY);
+      
+      // Validate connection before retry
+      const isValid = await validateConnection();
+      if (!isValid) {
+        console.log('⚠️ Connection validation failed, waiting longer...');
+        await wait(RETRY_DELAY * 2);
+      } else {
+        await wait(RETRY_DELAY);
+      }
+      
       return retryOperation(operation, retries - 1);
     }
     throw error;

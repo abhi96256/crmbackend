@@ -20,14 +20,14 @@ const pgConfig = {
   database: process.env.DB_NAME || 'crm_db',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   
-  // Connection pool settings
-  max: 10, // Reduced from 20
-  min: 1,  // Reduced from 2
-  idleTimeoutMillis: 60000, // 1 minute
-  connectionTimeoutMillis: 10000, // 10 seconds
-  acquireTimeoutMillis: 10000,
+  // Connection pool settings - more conservative for Render
+  max: 5, // Reduced from 10
+  min: 0, // Start with 0 connections
+  idleTimeoutMillis: 30000, // 30 seconds
+  connectionTimeoutMillis: 5000, // 5 seconds
+  acquireTimeoutMillis: 5000,
   reapIntervalMillis: 1000,
-  createTimeoutMillis: 10000,
+  createTimeoutMillis: 5000,
   destroyTimeoutMillis: 5000,
   
   // Better error handling
@@ -66,7 +66,7 @@ if (process.env.DB_DRIVER === 'postgresql') {
   });
   
   pool.on('error', (err, client) => {
-    console.error('❌ PostgreSQL pool error:', err);
+    console.error('❌ PostgreSQL pool error:', err.message);
     // Don't let the error crash the app
     if (client) {
       client.release();
