@@ -1,4 +1,4 @@
-import pool from '../config/db.js';
+const pool = require('../config/db.js');
 
 // Determine which database driver to use
 const usePostgreSQL = process.env.DB_DRIVER === 'postgresql';
@@ -25,7 +25,7 @@ const retryOperation = async (operation, retries = MAX_RETRIES) => {
 };
 
 // Unified database interface
-export const db = {
+const db = {
   // Execute queries with parameters
   async execute(query, params = []) {
     return retryOperation(async () => {
@@ -149,4 +149,4 @@ export const db = {
   }
 };
 
-export default db;
+module.exports = { db, default: db };

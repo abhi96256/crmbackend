@@ -85,8 +85,8 @@ app.get('/health', (req, res) => {
 app.get('/api/health', async (req, res) => {
   try {
     // Test database connection
-    const db = await import('./utils/database.js');
-    const dbHealth = await db.db.testConnection();
+    const { db } = require('./utils/database.js');
+    const dbHealth = await db.testConnection();
     
     res.json({
       status: 'OK',

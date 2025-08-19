@@ -1,8 +1,8 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import { body, validationResult } from 'express-validator';
-import bcrypt from 'bcryptjs';
-import db from '../utils/database.js';
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
+const { db } = require('../utils/database.js');
 
 const router = express.Router();
 
@@ -209,4 +209,4 @@ router.put('/profile', [
   }
 });
 
-export default router; 
+module.exports = router; 
