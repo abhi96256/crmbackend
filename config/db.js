@@ -1,5 +1,7 @@
-const mysql = require('mysql2/promise');
-const { Pool } = require('pg');
+import mysql from 'mysql2/promise';
+import pg from 'pg';
+
+const { Pool } = pg;
 
 // Determine which database driver to use
 const usePostgreSQL = process.env.DB_DRIVER === 'postgresql';
@@ -67,4 +69,4 @@ const testConnection = async () => {
 // Test connection on startup
 testConnection();
 
-module.exports = pool; 
+export default pool; 
