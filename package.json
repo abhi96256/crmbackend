@@ -10,7 +10,9 @@
     "build": "echo 'Build completed'",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test-db": "node test_connection.js",
-    "setup-db": "node check_and_setup_db.js"
+    "test-postgresql": "node test_postgresql_connection.js",
+    "setup-db": "node check_and_setup_db.js",
+    "setup-postgresql": "node setup_postgresql_database.js"
   },
   "dependencies": {
     "axios": "^1.11.0",

@@ -20,10 +20,10 @@ const pgConfig = {
   database: process.env.DB_NAME || 'crm_db',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   
-  // Connection pool settings - more conservative for Render
-  max: 5, // Reduced from 10
+  // Connection pool settings - very conservative for Render
+  max: 2, // Maximum 2 connections
   min: 0, // Start with 0 connections
-  idleTimeoutMillis: 30000, // 30 seconds
+  idleTimeoutMillis: 10000, // 10 seconds
   connectionTimeoutMillis: 5000, // 5 seconds
   acquireTimeoutMillis: 5000,
   reapIntervalMillis: 1000,
@@ -50,9 +50,20 @@ if (process.env.DB_DRIVER === 'postgresql') {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
-      max: 3,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      // Very conservative settings for Render
+      max: 2, // Maximum 2 connections
+      min: 0, // Start with 0 connections
+      idleTimeoutMillis: 10000, // 10 seconds
+      connectionTimeoutMillis: 5000, // 5 seconds
+      acquireTimeoutMillis: 5000,
+      reapIntervalMillis: 1000,
+      createTimeoutMillis: 5000,
+      destroyTimeoutMillis: 5000,
+      // Better error handling
+      allowExitOnIdle: false,
+      // Connection retry settings
+      maxRetries: 3,
+      retryDelay: 1000
     });
   } else {
     console.log('📊 Using individual environment variables');
