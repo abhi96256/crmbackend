@@ -1,18 +1,18 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import pool from './config/db.js';
-import authRoutes from './routes/auth.js';
-import leadRoutes from './routes/leads.js';
-import userRoutes from './routes/users.js';
-import pipelineRoutes from './routes/pipeline.js';
-import tasksRoutes from './routes/tasks.js';
-import mailRoutes from './routes/mail.js';
-import activityLogRoutes from './routes/activityLogs.js';
-import adminRoutes from './routes/admin.js';
-import linkedinRoutes from './routes/linkedin.js';
-import invoiceRoutes from './routes/invoices.js';
-import groupRoutes from './routes/groups.js';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const pool = require('./config/db.js');
+const authRoutes = require('./routes/auth.js');
+const leadRoutes = require('./routes/leads.js');
+const userRoutes = require('./routes/users.js');
+const pipelineRoutes = require('./routes/pipeline.js');
+const tasksRoutes = require('./routes/tasks.js');
+const mailRoutes = require('./routes/mail.js');
+const activityLogRoutes = require('./routes/activityLogs.js');
+const adminRoutes = require('./routes/admin.js');
+const linkedinRoutes = require('./routes/linkedin.js');
+const invoiceRoutes = require('./routes/invoices.js');
+const groupRoutes = require('./routes/groups.js');
 
 dotenv.config();
 

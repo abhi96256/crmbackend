@@ -1,4 +1,4 @@
-import pool from '../config/db.js';
+const pool = require('../config/db.js');
 
 // Activity Logger Utility
 export const activityLogger = {
@@ -350,4 +350,4 @@ export const activityLogger = {
   }
 };
 
-export default activityLogger; 
+module.exports = activityLogger; 

@@ -1,7 +1,7 @@
-import jwt from 'jsonwebtoken';
-import pool from '../config/db.js';
+const jwt = require('jsonwebtoken');
+const pool = require('../config/db.js');
 
-export const auth = async (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
@@ -28,7 +28,7 @@ export const auth = async (req, res, next) => {
   }
 };
 
-export const adminAuth = async (req, res, next) => {
+const adminAuth = async (req, res, next) => {
   try {
     await auth(req, res, () => {
       if (req.user.role !== 'admin') {
@@ -39,4 +39,6 @@ export const adminAuth = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
-}; 
+};
+
+module.exports = { auth, adminAuth }; 

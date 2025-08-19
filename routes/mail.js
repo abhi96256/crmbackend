@@ -1,7 +1,7 @@
-import express from 'express';
-import nodemailer from 'nodemailer';
-import db from '../config/db.js';
-import { auth } from '../middleware/auth.js';
+const express = require('express');
+const nodemailer = require('nodemailer');
+const { db } = require('../config/db.js');
+const { auth } = require('../middleware/auth.js');
 
 const router = express.Router();
 
@@ -299,4 +299,4 @@ router.post('/send-notification', async (req, res) => {
   }
 });
 
-export default router; 
+module.exports = router; 

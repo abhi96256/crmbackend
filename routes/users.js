@@ -176,4 +176,4 @@ router.delete('/:id', adminAuth, async (req, res) => {
   }
 });
 
-export default router; 
+module.exports = router; 

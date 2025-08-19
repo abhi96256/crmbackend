@@ -1,8 +1,8 @@
-import express from 'express';
-import { body, validationResult } from 'express-validator';
-import db from '../utils/database.js';
-import { auth } from '../middleware/auth.js';
-import activityLogger from '../utils/activityLogger.js';
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const { db } = require('../utils/database.js');
+const { auth } = require('../middleware/auth.js');
+const activityLogger = require('../utils/activityLogger.js');
 
 const router = express.Router();
 
@@ -631,4 +631,4 @@ router.get('/emails/public', async (req, res) => {
   }
 });
 
-export default router; 
+module.exports = router; 

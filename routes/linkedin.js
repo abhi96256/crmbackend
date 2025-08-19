@@ -1,7 +1,7 @@
-import express from 'express';
-import axios from 'axios';
-import db from '../utils/database.js';
-import { LINKEDIN_REDIRECT_URI } from '../config/urls.js';
+const express = require('express');
+const axios = require('axios');
+const { db } = require('../utils/database.js');
+const { LINKEDIN_REDIRECT_URI } = require('../config/urls.js');
 const router = express.Router();
 
 // LinkedIn OAuth configuration
@@ -334,4 +334,4 @@ router.post('/disconnect', async (req, res) => {
   }
 });
 
-export default router; 
+module.exports = router; 

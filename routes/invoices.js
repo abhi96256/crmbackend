@@ -1,6 +1,6 @@
-import express from 'express';
-import mysql from 'mysql2/promise';
-import db from '../config/db.js';
+const express = require('express');
+const mysql = require('mysql2/promise');
+const { db } = require('../config/db.js');
 
 const router = express.Router();
 
@@ -234,4 +234,4 @@ router.get('/stats/overview', async (req, res) => {
   }
 });
 
-export default router; 
+module.exports = router; 
