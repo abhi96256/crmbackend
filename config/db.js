@@ -18,19 +18,39 @@ if (usePostgreSQL) {
     port: process.env.DB_PORT || 5432,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    min: 2,
+    idleTimeoutMillis: 300000, // 5 minutes
+    connectionTimeoutMillis: 30000, // 30 seconds
+    acquireTimeoutMillis: 30000, // 30 seconds
+    reapIntervalMillis: 1000, // Check for dead connections every second
+    createTimeoutMillis: 30000, // 30 seconds to create connection
+    destroyTimeoutMillis: 5000, // 5 seconds to destroy connection
   };
   
   pool = new Pool(pgConfig);
   
-  // Test PostgreSQL connection
-  pool.on('connect', () => {
-    console.log('✅ Connected to PostgreSQL Database:', process.env.DB_NAME);
+  // PostgreSQL connection event handlers
+  pool.on('connect', (client) => {
+    console.log('✅ New client connected to PostgreSQL pool');
   });
   
-  pool.on('error', (err) => {
+  pool.on('acquire', (client) => {
+    console.log('✅ Client acquired from PostgreSQL pool');
+  });
+  
+  pool.on('release', (client) => {
+    console.log('✅ Client released back to PostgreSQL pool');
+  });
+  
+  pool.on('error', (err, client) => {
     console.error('❌ PostgreSQL Pool Error:', err);
+    if (client) {
+      console.log('Error occurred on client:', client);
+    }
+  });
+  
+  pool.on('remove', (client) => {
+    console.log('✅ Client removed from PostgreSQL pool');
   });
   
 } else {
