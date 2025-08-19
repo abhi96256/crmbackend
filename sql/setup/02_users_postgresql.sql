@@ -46,3 +46,4 @@ ON CONFLICT (user_id, permission_name) DO NOTHING;
 INSERT INTO activity_logs (user_id, action, description, ip_address) VALUES 
 (1, 'USER_SETUP', 'Users management system initialized', '127.0.0.1');
 
+

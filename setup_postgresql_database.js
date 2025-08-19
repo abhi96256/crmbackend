@@ -150,3 +150,4 @@ const setupDatabase = async () => {
 // Run the setup
 setupDatabase();
 
+
