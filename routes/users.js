@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import pool from '../config/db.js';
+import db from '../utils/database.js';
 import { auth, adminAuth } from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
 
@@ -9,7 +9,7 @@ const router = express.Router();
 // GET /api/users - Get all users (admin only)
 router.get('/', adminAuth, async (req, res) => {
   try {
-    const [users] = await pool.execute(
+    const [users] = await db.execute(
       'SELECT id, name, email, role, avatar, isActive, createdAt FROM users'
     );
     res.json(users);
@@ -22,7 +22,7 @@ router.get('/', adminAuth, async (req, res) => {
 // GET /api/users/employees - Get all employees and managers (admin only)
 router.get('/employees', adminAuth, async (req, res) => {
   try {
-    const [employees] = await pool.execute(
+    const [employees] = await db.execute(
       'SELECT id, name, email, role, avatar, isActive, createdAt FROM users WHERE role IN ("employee", "manager") ORDER BY createdAt DESC'
     );
     res.json(employees);
@@ -48,7 +48,7 @@ router.post('/employees', adminAuth, [
     const { name, email, password, role } = req.body;
 
     // Check if user already exists
-    const [existingUsers] = await pool.execute(
+    const [existingUsers] = await db.execute(
       'SELECT id FROM users WHERE email = ?',
       [email]
     );
@@ -62,13 +62,13 @@ router.post('/employees', adminAuth, [
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create new user with specified role
-    const [result] = await pool.execute(
+    const [result] = await db.execute(
       'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
       [name, email, hashedPassword, role]
     );
 
     // Get the created user
-    const [users] = await pool.execute(
+    const [users] = await db.execute(
       'SELECT id, name, email, role, avatar, isActive, createdAt FROM users WHERE id = ?',
       [result.insertId]
     );
@@ -86,7 +86,7 @@ router.post('/employees', adminAuth, [
 // GET /api/users/:id - Get user by ID
 router.get('/:id', auth, async (req, res) => {
   try {
-    const [users] = await pool.execute(
+    const [users] = await db.execute(
       'SELECT id, name, email, role, avatar, isActive, createdAt FROM users WHERE id = ?',
       [req.params.id]
     );
@@ -133,11 +133,11 @@ router.put('/:id', auth, [
       }
     }
     params.push(req.params.id);
-    await pool.execute(
+    await db.execute(
       `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
       params
     );
-    const [users] = await pool.execute(
+    const [users] = await db.execute(
       'SELECT id, name, email, role, avatar, isActive, createdAt FROM users WHERE id = ?',
       [req.params.id]
     );
@@ -154,7 +154,7 @@ router.put('/:id', auth, [
 // DELETE /api/users/:id - Delete user (admin only)
 router.delete('/:id', adminAuth, async (req, res) => {
   try {
-    const [users] = await pool.execute(
+    const [users] = await db.execute(
       'SELECT id FROM users WHERE id = ?',
       [req.params.id]
     );
@@ -165,7 +165,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
     if (req.user.id === Number(req.params.id)) {
       return res.status(400).json({ message: 'Cannot delete your own account' });
     }
-    await pool.execute(
+    await db.execute(
       'DELETE FROM users WHERE id = ?',
       [req.params.id]
     );

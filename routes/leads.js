@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import pool from '../config/db.js';
+import db from '../utils/database.js';
 import { auth } from '../middleware/auth.js';
 import activityLogger from '../utils/activityLogger.js';
 
@@ -9,7 +9,7 @@ const router = express.Router();
 // GET /api/leads/public - Get all leads without authentication (for WhatsApp bot)
 router.get('/public', async (req, res) => {
   try {
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads ORDER BY createdAt DESC`
     );
     res.json(leads);
@@ -46,11 +46,11 @@ router.get('/all', auth, async (req, res) => {
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
     
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads ${where} ORDER BY createdAt DESC LIMIT ${limitNum} OFFSET ${offsetNum}`,
       params
     );
-    const [countRows] = await pool.execute(
+    const [countRows] = await db.execute(
       `SELECT COUNT(*) as total FROM leads ${where}`,
       params
     );
@@ -92,11 +92,11 @@ router.get('/', auth, async (req, res) => {
       where += ' AND (name LIKE ? OR contact_name LIKE ? OR company_name LIKE ?)';
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads ${where} ORDER BY createdAt DESC LIMIT ${limitNum} OFFSET ${offsetNum}`,
       params
     );
-    const [countRows] = await pool.execute(
+    const [countRows] = await db.execute(
       `SELECT COUNT(*) as total FROM leads ${where}`,
       params
     );
@@ -116,7 +116,7 @@ router.get('/', auth, async (req, res) => {
 // GET /api/leads/:id - Get lead by ID
 router.get('/:id', auth, async (req, res) => {
   try {
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads WHERE id = ?`,
       [req.params.id]
     );
@@ -128,7 +128,7 @@ router.get('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
     // Get notes
-    const [notes] = await pool.execute(
+    const [notes] = await db.execute(
       `SELECT n.*, u.name as created_by_name FROM notes n LEFT JOIN users u ON n.created_by = u.id WHERE n.lead_id = ? ORDER BY n.createdAt DESC`,
       [lead.id]
     );
@@ -166,11 +166,11 @@ router.post('/', auth, [
       priority = 'medium',
       expectedCloseDate = null
     } = req.body;
-    const [result] = await pool.execute(
+    const [result] = await db.execute(
       `INSERT INTO leads (name, amount, stage, pipeline, contact_name, contact_phone, contact_email, contact_position, company_name, company_address, assigned_to, created_by, source, priority, expected_close_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [name, amount, stage, pipeline, contactName, contactPhone, contactEmail, contactPosition, companyName, companyAddress, req.user.id, req.user.id, source, priority, expectedCloseDate]
     );
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads WHERE id = ?`,
       [result.insertId]
     );
@@ -198,7 +198,7 @@ router.put('/:id', auth, async (req, res) => {
   console.log('User:', req.user);
   
   try {
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads WHERE id = ?`,
       [req.params.id]
     );
@@ -273,11 +273,11 @@ router.put('/:id', auth, async (req, res) => {
     }
     console.log('Updating lead with:', { updates, params, leadId: req.params.id });
     params.push(req.params.id);
-    await pool.execute(
+    await db.execute(
       `UPDATE leads SET ${updates.join(', ')} WHERE id = ?`,
       params
     );
-    const [updatedLeads] = await pool.execute(
+    const [updatedLeads] = await db.execute(
       `SELECT * FROM leads WHERE id = ?`,
       [req.params.id]
     );
@@ -304,7 +304,7 @@ router.patch('/:id/stage', auth, async (req, res) => {
   const { id } = req.params;
   const { stage } = req.body;
   try {
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads WHERE id = ?`,
       [id]
     );
@@ -315,7 +315,7 @@ router.patch('/:id/stage', auth, async (req, res) => {
     if (lead.assigned_to !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
-    await pool.execute(
+    await db.execute(
       `UPDATE leads SET stage = ? WHERE id = ?`,
       [stage, id]
     );
@@ -339,7 +339,7 @@ router.patch('/:id/stage', auth, async (req, res) => {
 // DELETE /api/leads/:id - Delete a lead
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads WHERE id = ?`,
       [req.params.id]
     );
@@ -350,7 +350,7 @@ router.delete('/:id', auth, async (req, res) => {
     if (lead.assigned_to !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
-    await pool.execute(
+    await db.execute(
       `DELETE FROM leads WHERE id = ?`,
       [req.params.id]
     );
@@ -370,7 +370,7 @@ router.post('/:id/notes', auth, [
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads WHERE id = ?`,
       [req.params.id]
     );
@@ -381,12 +381,12 @@ router.post('/:id/notes', auth, [
     if (lead.assigned_to !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
-    await pool.execute(
+    await db.execute(
       `INSERT INTO notes (lead_id, content, created_by) VALUES (?, ?, ?)`,
       [req.params.id, req.body.content, req.user.id]
     );
     // Return updated notes
-    const [notes] = await pool.execute(
+    const [notes] = await db.execute(
       `SELECT n.*, u.name as created_by_name FROM notes n LEFT JOIN users u ON n.created_by = u.id WHERE n.lead_id = ? ORDER BY n.createdAt DESC`,
       [req.params.id]
     );
@@ -407,7 +407,7 @@ router.patch('/:id/stage', auth, [
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const [leads] = await pool.execute(
+    const [leads] = await db.execute(
       `SELECT * FROM leads WHERE id = ?`,
       [req.params.id]
     );
@@ -424,13 +424,13 @@ router.patch('/:id/stage', auth, [
     const newStage = req.body.stage;
     
     // Update the lead stage
-    await pool.execute(
+    await db.execute(
       `UPDATE leads SET stage = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
       [newStage, req.params.id]
     );
     
     // Log the stage change activity
-    await pool.execute(
+    await db.execute(
       `INSERT INTO activity_logs (user_id, object_type, object_id, object_name, event_type, event_description, value_before, value_after, impact, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         req.user.id,
@@ -458,19 +458,19 @@ router.get('/stats/overview', auth, async (req, res) => {
   try {
     let where = 'WHERE assigned_to = ?';
     let params = [req.user.id];
-    const [stats] = await pool.execute(
+    const [stats] = await db.execute(
       `SELECT stage, COUNT(*) as count, SUM(amount) as totalAmount FROM leads ${where} GROUP BY stage`,
       params
     );
-    const [statusStats] = await pool.execute(
+    const [statusStats] = await db.execute(
       `SELECT status, COUNT(*) as count FROM leads ${where} GROUP BY status`,
       params
     );
-    const [totalLeadsRow] = await pool.execute(
+    const [totalLeadsRow] = await db.execute(
       `SELECT COUNT(*) as totalLeads FROM leads ${where}`,
       params
     );
-    const [totalAmountRow] = await pool.execute(
+    const [totalAmountRow] = await db.execute(
       `SELECT SUM(amount) as totalAmount FROM leads ${where}`,
       params
     );
@@ -493,13 +493,13 @@ router.get('/stats/win-loss', auth, async (req, res) => {
     let params = [req.user.id];
     
     // Get total new leads (leads created in the last 30 days)
-    const [newLeadsResult] = await pool.execute(
+    const [newLeadsResult] = await db.execute(
       `SELECT COUNT(*) as count FROM leads ${where} AND createdAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)`,
       params
     );
     
     // Get stage-wise analysis with entered and lost counts
-    const [stageAnalysis] = await pool.execute(`
+    const [stageAnalysis] = await db.execute(`
       SELECT 
         stage,
         COUNT(*) as currentLeads,
@@ -523,7 +523,7 @@ router.get('/stats/win-loss', auth, async (req, res) => {
     `, params);
     
     // Get historical stage transitions (entered counts)
-    const [stageTransitions] = await pool.execute(`
+    const [stageTransitions] = await db.execute(`
       SELECT 
         stage,
         COUNT(*) as enteredCount
@@ -542,7 +542,7 @@ router.get('/stats/win-loss', auth, async (req, res) => {
     `, params);
     
     // Get overall win/loss summary
-    const [overallStats] = await pool.execute(`
+    const [overallStats] = await db.execute(`
       SELECT 
         COUNT(*) as totalLeads,
         SUM(CASE WHEN status = 'won' THEN 1 ELSE 0 END) as totalWon,
@@ -604,7 +604,7 @@ router.get('/stats/win-loss', auth, async (req, res) => {
 // GET /api/leads/emails - Get all unique contact emails for the logged-in user
 router.get('/emails', auth, async (req, res) => {
   try {
-    const [rows] = await pool.execute(
+    const [rows] = await db.execute(
       'SELECT DISTINCT contact_email FROM leads WHERE contact_email IS NOT NULL AND contact_email != "" ORDER BY contact_email',
       []
     );
@@ -619,7 +619,7 @@ router.get('/emails', auth, async (req, res) => {
 // GET /api/leads/emails/public - Get all unique contact emails without authentication
 router.get('/emails/public', async (req, res) => {
   try {
-    const [rows] = await pool.execute(
+    const [rows] = await db.execute(
       'SELECT DISTINCT contact_email FROM leads WHERE contact_email IS NOT NULL AND contact_email != "" ORDER BY contact_email',
       []
     );

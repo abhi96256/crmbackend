@@ -1,6 +1,6 @@
 import express from 'express';
 import axios from 'axios';
-import pool from '../config/db.js';
+import db from '../utils/database.js';
 import { LINKEDIN_REDIRECT_URI } from '../config/urls.js';
 const router = express.Router();
 
@@ -47,7 +47,7 @@ router.get('/auth/callback', async (req, res) => {
     const { access_token, expires_in } = tokenResponse.data;
 
     // Store the access token in database
-    const [result] = await pool.execute(
+    const [result] = await db.execute(
       'INSERT INTO linkedin_integrations (access_token, expires_at, created_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE access_token = ?, expires_at = ?',
       [access_token, new Date(Date.now() + expires_in * 1000), access_token, new Date(Date.now() + expires_in * 1000)]
     );
@@ -67,7 +67,7 @@ router.get('/auth/callback', async (req, res) => {
 // Get LinkedIn integration status
 router.get('/status', async (req, res) => {
   try {
-    const [rows] = await pool.execute(
+    const [rows] = await db.execute(
       'SELECT * FROM linkedin_integrations ORDER BY created_at DESC LIMIT 1'
     );
 
@@ -99,7 +99,7 @@ router.get('/status', async (req, res) => {
 router.post('/sync-leads', async (req, res) => {
   try {
     // Get valid access token
-    const [rows] = await pool.execute(
+    const [rows] = await db.execute(
       'SELECT access_token FROM linkedin_integrations WHERE expires_at > NOW() ORDER BY created_at DESC LIMIT 1'
     );
 
@@ -162,7 +162,7 @@ router.post('/sync-leads', async (req, res) => {
             leadScore: lead.leadScore || 50
           };
 
-          await pool.execute(
+          await db.execute(
             `INSERT INTO linkedin_leads 
              (linkedin_id, first_name, last_name, email, phone, company, position, industry, location, profile_url, lead_score) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
@@ -178,7 +178,7 @@ router.post('/sync-leads', async (req, res) => {
         }
 
         // Update sync timestamp
-        await pool.execute(
+        await db.execute(
           'UPDATE linkedin_integrations SET last_sync = NOW(), total_leads = (SELECT COUNT(*) FROM linkedin_leads) WHERE access_token = ?',
           [accessToken]
         );
@@ -275,7 +275,7 @@ async function handleDemoMode(accessToken, res) {
 
   // Process and store leads
   for (const lead of mockLeads) {
-    await pool.execute(
+    await db.execute(
       `INSERT INTO linkedin_leads 
        (linkedin_id, first_name, last_name, email, phone, company, position, industry, location, profile_url, lead_score) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
@@ -291,7 +291,7 @@ async function handleDemoMode(accessToken, res) {
   }
 
   // Update sync timestamp
-  await pool.execute(
+  await db.execute(
     'UPDATE linkedin_integrations SET last_sync = NOW(), total_leads = (SELECT COUNT(*) FROM linkedin_leads) WHERE access_token = ?',
     [accessToken]
   );
@@ -307,7 +307,7 @@ async function handleDemoMode(accessToken, res) {
 // Get LinkedIn leads
 router.get('/leads', async (req, res) => {
   try {
-    const [rows] = await pool.execute(
+    const [rows] = await db.execute(
       'SELECT * FROM linkedin_leads ORDER BY created_at DESC LIMIT 100'
     );
 
@@ -326,7 +326,7 @@ router.get('/leads', async (req, res) => {
 // Disconnect LinkedIn
 router.post('/disconnect', async (req, res) => {
   try {
-    await pool.execute('DELETE FROM linkedin_integrations');
+    await db.execute('DELETE FROM linkedin_integrations');
     res.json({ success: true, message: 'LinkedIn disconnected successfully' });
   } catch (error) {
     console.error('Error disconnecting LinkedIn:', error);

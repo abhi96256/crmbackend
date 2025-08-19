@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import pool from '../config/db.js';
+import db from '../utils/database.js';
 import { auth } from '../middleware/auth.js';
 import activityLogger from '../utils/activityLogger.js';
 
@@ -9,7 +9,7 @@ const router = express.Router();
 // GET /api/groups - Get all groups for the authenticated user
 router.get('/', auth, async (req, res) => {
   try {
-    const [groups] = await pool.execute(
+    const [groups] = await db.execute(
       `SELECT g.*, COUNT(gm.id) as member_count 
        FROM \`groups\` g 
        LEFT JOIN group_members gm ON g.id = gm.group_id 
@@ -21,7 +21,7 @@ router.get('/', auth, async (req, res) => {
 
     // Get members for each group
     for (let group of groups) {
-      const [members] = await pool.execute(
+      const [members] = await db.execute(
         'SELECT email FROM group_members WHERE group_id = ? ORDER BY added_at',
         [group.id]
       );
@@ -49,7 +49,7 @@ router.post('/', auth, [
     const { name, description = '', emails = [] } = req.body;
 
     // Check if group name already exists for this user
-    const [existingGroups] = await pool.execute(
+    const [existingGroups] = await db.execute(
       'SELECT id FROM `groups` WHERE name = ? AND created_by = ? AND is_active = TRUE',
       [name, req.user.id]
     );
@@ -59,7 +59,7 @@ router.post('/', auth, [
     }
 
     // Create the group
-    const [groupResult] = await pool.execute(
+    const [groupResult] = await db.execute(
       'INSERT INTO `groups` (name, description, created_by) VALUES (?, ?, ?)',
       [name, description, req.user.id]
     );
@@ -69,7 +69,7 @@ router.post('/', auth, [
     // Add members to the group
     if (emails.length > 0) {
       for (const email of emails) {
-        await pool.execute(
+        await db.execute(
           'INSERT INTO group_members (group_id, email) VALUES (?, ?)',
           [groupId, email]
         );
@@ -77,12 +77,12 @@ router.post('/', auth, [
     }
 
     // Get the created group with members
-    const [newGroup] = await pool.execute(
+    const [newGroup] = await db.execute(
       'SELECT * FROM `groups` WHERE id = ?',
       [groupId]
     );
 
-    const [members] = await pool.execute(
+    const [members] = await db.execute(
       'SELECT email FROM group_members WHERE group_id = ? ORDER BY added_at',
       [groupId]
     );
@@ -129,7 +129,7 @@ router.put('/:id', auth, [
     const { name, description = '', emails = [] } = req.body;
 
     // Check if group exists and belongs to user
-    const [existingGroup] = await pool.execute(
+    const [existingGroup] = await db.execute(
       'SELECT * FROM `groups` WHERE id = ? AND created_by = ? AND is_active = TRUE',
       [id, req.user.id]
     );
@@ -139,7 +139,7 @@ router.put('/:id', auth, [
     }
 
     // Check if new name conflicts with existing groups
-    const [nameConflict] = await pool.execute(
+    const [nameConflict] = await db.execute(
       'SELECT id FROM `groups` WHERE name = ? AND created_by = ? AND id != ? AND is_active = TRUE',
       [name, req.user.id, id]
     );
@@ -149,18 +149,18 @@ router.put('/:id', auth, [
     }
 
     // Update the group
-    await pool.execute(
+    await db.execute(
       'UPDATE `groups` SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [name, description, id]
     );
 
     // Remove all existing members
-    await pool.execute('DELETE FROM group_members WHERE group_id = ?', [id]);
+    await db.execute('DELETE FROM group_members WHERE group_id = ?', [id]);
 
     // Add new members
     if (emails.length > 0) {
       for (const email of emails) {
-        await pool.execute(
+        await db.execute(
           'INSERT INTO group_members (group_id, email) VALUES (?, ?)',
           [id, email]
         );
@@ -168,12 +168,12 @@ router.put('/:id', auth, [
     }
 
     // Get the updated group with members
-    const [updatedGroup] = await pool.execute(
+    const [updatedGroup] = await db.execute(
       'SELECT * FROM `groups` WHERE id = ?',
       [id]
     );
 
-    const [members] = await pool.execute(
+    const [members] = await db.execute(
       'SELECT email FROM group_members WHERE group_id = ? ORDER BY added_at',
       [id]
     );
@@ -211,7 +211,7 @@ router.delete('/:id', auth, async (req, res) => {
     const { id } = req.params;
 
     // Check if group exists and belongs to user
-    const [existingGroup] = await pool.execute(
+    const [existingGroup] = await db.execute(
       'SELECT * FROM `groups` WHERE id = ? AND created_by = ? AND is_active = TRUE',
       [id, req.user.id]
     );
@@ -223,7 +223,7 @@ router.delete('/:id', auth, async (req, res) => {
     const groupName = existingGroup[0].name;
 
     // Soft delete the group (set is_active to false)
-    await pool.execute(
+    await db.execute(
       'UPDATE `groups` SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [id]
     );
@@ -252,7 +252,7 @@ router.get('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [groups] = await pool.execute(
+    const [groups] = await db.execute(
       'SELECT * FROM `groups` WHERE id = ? AND created_by = ? AND is_active = TRUE',
       [id, req.user.id]
     );
@@ -264,7 +264,7 @@ router.get('/:id', auth, async (req, res) => {
     const group = groups[0];
 
     // Get members
-    const [members] = await pool.execute(
+    const [members] = await db.execute(
       'SELECT email FROM group_members WHERE group_id = ? ORDER BY added_at',
       [id]
     );
